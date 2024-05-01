@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thunderhead.drawer</title>
+    <style>
+
+        :root {
+            --glow-color: hwb(186 38% 0%);
+        }
+
+        body {
+            background: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+        }
+
+        #canvas-container {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        #myCanvas {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            background-color: white;
+            box-shadow: 0 0 0 var(--glow-color); 
+            transition: box-shadow 0.3s ease;
+        }
+
+        #myCanvas:hover {
+            cursor: grab;
+            box-shadow: 0 0 60px var(--glow-color);
+            
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            margin-left: auto;
+            margin-right: 10px;
+            display: none;
+            flex-direction: column;
+            z-index: 2;
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 250px; 
+            transition: box-shadow 0.3s ease;
+        }
+
+        .form-container:hover {
+            box-shadow: 0 0 40px var(--glow-color);
+        }
+
+        #formContainer.active .form-container {
+            display: flex;
+        }
+
+
+        .undoBtn,
+        .redoBtn {
+            display: none; 
+            background: var(--glow-color);
+            color: #fff;
+            padding: 0.5em 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px; 
+            z-index: 2;
+            position: fixed;
+            bottom: 20px; 
+            font-size: 20px;
+        }
+
+        .undoBtn:hover,
+        .redoBtn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        body.glowing-btn-clicked .undoBtn,
+        body.glowing-btn-clicked .redoBtn {
+            display: inline-block !important; 
+        }
+
+        .undoBtn {
+            left: calc(50% - 110px); 
+        }
+
+        .redoBtn {
+            left: calc(50% + 5px); 
+        }
+
+
+        .canvas {
+            position: absolute;
+            top: 50%;
+            left: 250px;
+            transform: translateY(-50%);
+        }
+
+        
+        .form-container {
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+        }
+
+        .shape-form {
+            width: 200px;
+            padding: 10px;
+            border: 3px solid transparent;
+            border-radius: 8px;
+            font-family: "Verdana", sans-serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+        }
+
+        .shape-form h2 {
+            margin-bottom: 10px;
+        }
+
+        .shape-form label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .shape-form input,
+        .shape-form select {
+            margin-bottom: 15px;
+        }
+
+        .shape-form button {
+            background: var(--glow-color);
+            color: #fff;
+            padding: 0.5em 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .shape-form button:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        #triangleForm {
+            display: none;
+            width: 250px;
+            padding: 10px;
+            border: 3px solid transparent;
+            margin-left: 30px;
+            border-radius: 8px;
+            font-family: "Verdana", sans-serif;
+            font-size: 1.2em;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            transition: border-color 0.3s ease;
+            position: absolute;
+            top: 50%;
+            left: 10px;
+            transform: translateY(-50%);
+            background-color: white; 
+            z-index: 2; 
+            display: none;
+            flex-direction: column; 
+            align-items: flex-start; 
+            transition: box-shadow 0.3s ease;
+        }
+
+        #triangleForm:hover {
+            box-shadow: 0 0 40px var(--glow-color);
+        }
+
+        #triangleForm h2 {
+            margin-bottom: 10px;
+        }
+
+        #triangleForm label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        #triangleForm input,
+        #triangleForm select {
+            margin-bottom: 15px;
+        }
+
+        #triangleForm button {
+            background: var(--glow-color);
+            color: #fff;
+            padding: 0.5em 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        #triangleForm button:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .instructions-box {
+            background-color: white;
+            padding: 5px;
+            border: 2px solid black;
+            border-radius: 8px;
+            margin: 5px;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            z-index: 3; 
+            transition: box-shadow 0.3s ease;
+            font-family: Verdana, sans-serif;
+            font-size: 14px;
+        }
+
+        .instructions-box:hover {
+            box-shadow: 0 0 40px var(--glow-color);
+        }
+
+       
+        .instructions-box.hide {
+            opacity: 0;
+        }
+
+      
+        .instructions-box.show {
+            opacity: 1;
+        }
+
+        .glowing-btn {
+            position: relative;
+            color: var(--glow-color);
+            cursor: pointer;
+            padding: 0.35em 1em;
+            border: 0.15em solid var(--glow-color);
+            border-radius: 0.45em;
+            background: none;
+            perspective: 2em;
+            font-family: "Raleway", sans-serif;
+            font-size: 2em;
+            font-weight: 900;
+            letter-spacing: 1em;
+            box-shadow: inset 0px 0px 0.5em 0px var(--glow-color), 0px 0px 0.5em 0px var(--glow-color);
+            animation: border-flicker 2s linear infinite;
+        }
+
+        .glowing-txt {
+            float: left;
+            margin-right: -0.8em;
+            text-shadow: 0 0 0.125em #ffffff4d, 0 0 0.45em var(--glow-color);
+            animation: text-flicker 3s linear infinite;
+        }
+
+        .faulty-letter {
+            opacity: 0.5;
+            animation: faulty-flicker 2s linear infinite;
+        }
+
+        .glowing-btn::before {
+            content: "";
+            position: absolute;
+            background: var(--glow-color);
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            opacity: 0.7;
+            filter: blur(1em);
+            transform: translateY(120%) rotateX(95deg) scale(1.0, 0.35);
+            pointer-events: none;
+        }
+
+        .glowing-btn::after {
+            content: "";
+            position: absolute;
+            background-color: var(--glow-color);
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 100ms linear;
+        }
+
+        .glowing-btn:hover {
+            color: rgba(0, 0, 0, 0.8);
+            text-shadow: none;
+            animation: none;
+        }
+
+        .glowing-btn:hover .glowing-txt {
+            animation: none;
+        }
+
+        .glowing-btn:hover .faulty-letter {
+            animation: none;
+            text-shadow: none;
+            opacity: 1;
+        }
+
+        .glowing-btn:hover:before {
+            filter: blur(1.5em);
+            opacity: 1;
+        }
+
+        .glowing-btn:hover:after {
+            opacity: 1;
+        }
+
+        @keyframes faulty-flicker {
+            0% {
+                opacity: 0.1;
+            }
+
+            2% {
+                opacity: 0.1;
+            }
+
+            4% {
+                opacity: 0.5;
+            }
+
+            19% {
+                opacity: 0.5;
+            }
+
+            21% {
+                opacity: 0.1;
+            }
+
+            23% {
+                opacity: 1;
+            }
+
+            80% {
+                opacity: 0.5;
+            }
+
+            83% {
+                opacity: 0.4;
+            }
+
+            87% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes text-flicker {
+            0% {
+                opacity: 0.1;
+            }
+
+            2% {
+                opacity: 1;
+            }
+
+            8% {
+                opacity: 0.1;
+            }
+
+            9% {
+                opacity: 1;
+            }
+
+            12% {
+                opacity: 0.1;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            25% {
+                opacity: 0.3;
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            70% {
+                opacity: 0.7;
+            }
+
+            72% {
+                opacity: 0.2;
+            }
+
+            77% {
+                opacity: 0.9;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes border-flicker {
+            0% {
+                opacity: 0.1;
+            }
+
+            2% {
+                opacity: 1;
+            }
+
+            4% {
+                opacity: 0.1;
+            }
+
+            8% {
+                opacity: 1;
+            }
+
+            70% {
+                opacity: 0.7;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="instructionsBox" class="instructions-box hide">
+        <h3>Welcome to Thunderhead.drawer</h3>
+        <p>This is a simple tool to experiment drawing shapes and <br>
+            scenery. Enter in parameters in the boxes below, <br>
+            choose a color, where you want your shape to be born and <br>
+            press create!! Once the shape is on the canvas, you can <br>
+            move it around by dragging it, right-click to fix the <br>
+            shapes position, and right-click again to unfix. Feel <br>
+            free to use the undo and redo buttons <br> at the bottom 
+            of the page if you made a mistake.<br>
+            Have fun creating!!
+        
+        </p>
+    </div>
+    <div id="canvas-container">
+        <button id="undoBtn" class="undoBtn">Undo</button>
+        <button id="redoBtn" class="redoBtn">Redo</button>
+
+        <canvas id="myCanvas" width="1000" height="700"></canvas>
+
+        <!-- Rectangle and Circle forms -->
+        <div class="form-container" id="shapeFormContainer">
+            <!-- Rectangle form -->
+            <form id="rectangleForm" class="shape-form">
+                <h2>Rectangle</h2>
+                <label for="rectangleWidth" class="width-label">Width:</label>
+                <input type="number" id="rectangleWidth" name="width" required>
+
+                <label for="rectangleHeight" class="height-label">Height:</label>
+                <input type="number" id="rectangleHeight" name="height" required>
+
+                <label for="rectangleColor" class="rectangle-color-label">Color:</label>
+                <input type="color" id="rectangleColor" name="color" value="#000000" required>
+
+                <br>
+
+                <label for="rectanglePosition" class="rectangle-position-label">Position:</label>
+                <select id="rectanglePosition" name="position">
+                    <option value="top-right">Top Right</option>
+                    <option value="top-center">Top Center</option>
+                    <option value="top-left">Top Left</option>
+                    <option value="right-center">Right Center</option>
+                    <option value="center">Center</option>
+                    <option value="left-center">Left Center</option>
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="bottom-center">Bottom Center</option>
+                    <option value="bottom-left">Bottom Left</option>
+                </select>
+
+                <button type="button" id="createRectangleBtn" class="createRectangleBtn">Create Rectangle</button>
+            </form>
+
+            <!-- Circle form -->
+            <form id="circleForm" class="shape-form">
+                <h2>Circle</h2>
+                <label for="circleRadius" class="radius-label">Radius:</label>
+                <input type="number" id="circleRadius" name="radius" required>
+
+                <label for="circleColor" class="circle-color-label">Color:</label>
+                <input type="color" id="circleColor" name="color" value="#000000" required>
+
+                <br>
+
+                <label for="circlePosition" class="circle-position-label">Position:</label>
+                <select id="circlePosition" name="position">
+                    <option value="top-right">Top Right</option>
+                    <option value="top-center">Top Center</option>
+                    <option value="top-left">Top Left</option>
+                    <option value="right-center">Right Center</option>
+                    <option value="center">Center</option>
+                    <option value="left-center">Left Center</option>
+                    <option value="bottom-right">Bottom Right</option>
+                    <option value="bottom-center">Bottom Center</option>
+                    <option value="bottom-left">Bottom Left</option>
+                </select>
+                <br>
+                <button type="button" id="createCircleBtn" class="createCircleBtn">Create Circle</button>
+            </form>
+        </div>
+        
+        <!-- Triangle form -->
+        <form id="triangleForm" class="shape-form">
+            <h2>Triangle</h2>
+            <label for="triangleBase" class="base-label">Base:</label>
+            <input type="number" id="triangleBase" name="base" required>
+
+            <label for="triangleHeight" class="height-label">Height:</label>
+            <input type="number" id="triangleHeight" name="height" required>
+
+            <label for="triangleColor" class="triangle-color-label">Color:</label>
+            <input type="color" id="triangleColor" name="color" value="#000000" required>
+
+            <label for="trianglePosition" class="triangle-position-label">Position:</label>
+            <select id="trianglePosition" name="position">
+                <option value="top-right">Top Right</option>
+                <option value="top-center">Top Center</option>
+                <option value="top-left">Top Left</option>
+                <option value="right-center">Right Center</option>
+                <option value="center">Center</option>
+                <option value="left-center">Left Center</option>
+                <option value="bottom-right">Bottom Right</option>
+                <option value="bottom-center">Bottom Center</option>
+                <option value="bottom-left">Bottom Left</option>
+            </select>
+
+            <button type="button" id="createTriangleBtn" class="createTriangleBtn">Create Triangle</button>
+        </form>
+
+        <!-- Glowing button -->
+        <button id="glowingBtn" class="glowing-btn" onclick="toggleCanvasAndForms()">
+            <span class="glowing-txt">T
+                <span class="faulty-letter">H</span> U N D E R H E A D
+            </span>
+        </button>
+    </div>
+
+    <script src="scripts/project.js"></script>
+</body>
+</html>
